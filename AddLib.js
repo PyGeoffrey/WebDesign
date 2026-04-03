@@ -1,5 +1,5 @@
-let addNewLib = function(url, toinclude) {
+let addNewLib = function(url) {
 	let newScript = document.createElement("script");
 	newScript.src = url;
-	document.getElementById(toinclude).before(newScript);
+	document.body.prepend(newScript);
 }
