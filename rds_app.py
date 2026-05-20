@@ -9,7 +9,6 @@ from contextlib import contextmanager
 import json
 from datetime import datetime
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-import requests
 from fastapi import FastAPI
 
 app = FastAPI()
