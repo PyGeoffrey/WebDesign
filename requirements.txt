@@ -1,7 +1,4 @@
 pymysql==1.1.0
-json
-datetime
-config
 fastapi
 cryptography
 uvicorn
