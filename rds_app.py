@@ -132,7 +132,7 @@ def listusers():
             return json.dumps(results)
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
-            return []
+            return {"result": "Error retrieving users"}
 
 
 def listresults(username):
@@ -145,7 +145,7 @@ def listresults(username):
             return json.dumps(results)
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
-            return []
+            return {"result": "User not found"}
 
 
 def cleardata(username):
