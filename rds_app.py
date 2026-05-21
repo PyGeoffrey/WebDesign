@@ -202,10 +202,9 @@ class RDSApp:
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
 # Initialize the application and set up tables on startup
-app = RDSApp
-app = RDSApp()
-app.__init__()
-app.setup_tables()
+rapp = RDSApp()
+rapp.__init__()
+rapp.setup_tables()
 """
 Just a dev note: Here are the URLS and HTML methods for each endpoint in the RDSApp class:
 POST /insert_data - Insert a new score entry for a user
