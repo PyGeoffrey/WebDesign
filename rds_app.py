@@ -202,7 +202,7 @@ class RDSApp:
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
 # Initialize the application and set up tables on startup
-app = RDSApp()
+app = RDSApp
 app.__init__()
 app.setup_tables()
 """
