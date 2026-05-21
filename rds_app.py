@@ -12,7 +12,6 @@ from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 from fastapi import FastAPI
 
 app = FastAPI()
-@app.get("/")
 class RDSApp:
     """Handles RDS operations with best practices."""
 
