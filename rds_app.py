@@ -195,14 +195,10 @@ class RDSApp:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             try:
-                sure = input("Are you sure you want to delete ALL data? Type 'YES' to confirm: ")
-                if sure.lower() == "yes":
-                    cursor.execute("DELETE FROM scoretables;")
-                    cursor.execute("DELETE FROM users;")
-                    conn.commit()
-                    print("Success - Hard reset completed")
-                else:
-                    print("Hard reset cancelled")
+                cursor.execute("DELETE FROM scoretables;")
+                cursor.execute("DELETE FROM users;")
+                conn.commit()
+                print("Success - Hard reset completed")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
 # Initialize the application and set up tables on startup
