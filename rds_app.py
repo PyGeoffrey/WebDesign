@@ -143,7 +143,6 @@ class RDSApp:
                 cursor.execute("SELECT results FROM scoretables WHERE username = %s;", (username,))
                 results = cursor.fetchall()
                 print("Success - Retrieved results")
-                requests.post("https://learngd.w3spaces.com", json=results)  # Example of making an external API call with the retrieved data
                 return json.dumps(results)
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
