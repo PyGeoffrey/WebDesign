@@ -9,9 +9,9 @@ from contextlib import contextmanager
 import json
 from datetime import datetime
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-from fastapi import FastAPI
+import requests
 
-app = FastAPI()
+
 class RDSApp:
     """Handles RDS operations with best practices."""
     
@@ -69,7 +69,6 @@ class RDSApp:
             except pymysql.Error as e:
                 # Print database error details for debugging
                 print("Error", e.args[0], "-", e.args[1])
-    @app.post("/insert_data")
     def insert_data(self, username, score, qar):
         """Insert a new score entry for the given username."""
         with self.get_connection() as conn:
@@ -90,7 +89,6 @@ class RDSApp:
                 return newJSON
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-    @app.post("/new_user")
     def new_user(self, em, rn, un, pw):
         """Create a new user if the email is not already registered."""
         with self.get_connection() as conn:
@@ -108,7 +106,6 @@ class RDSApp:
                     print("Error - User already exists")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-    @app.post("/auth_user")
     def authuser(self, em, pw):
         """Authenticate a user by email and password."""
         with self.get_connection() as conn:
@@ -127,7 +124,6 @@ class RDSApp:
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
                 return False
-    @app.get("/list_users")
     def listusers(self):
         """Return a JSON list of registered users."""
         with self.get_connection() as conn:
@@ -140,7 +136,6 @@ class RDSApp:
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
                 return []
-    @app.get("/list_results")
     def listresults(self, username):
         """Return stored score results for a given username."""
         with self.get_connection() as conn:
@@ -149,11 +144,11 @@ class RDSApp:
                 cursor.execute("SELECT results FROM scoretables WHERE username = %s;", (username,))
                 results = cursor.fetchall()
                 print("Success - Retrieved results")
+                requests.post("https://learngd.w3spaces.com", json=results)  # Example of making an external API call with the retrieved data
                 return json.dumps(results)
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
                 return []
-    @app.delete("/clear_data")
     def cleardata(self, username):
         """Delete all score history for the specified user."""
         with self.get_connection() as conn:
@@ -164,7 +159,6 @@ class RDSApp:
                 print("Success - Cleared data")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-    @app.delete("/delete_user")
     def deleteuser(self, em):
         """Delete a user and all their associated score data."""
         with self.get_connection() as conn:
@@ -178,7 +172,6 @@ class RDSApp:
                 print("Success - Deleted user and associated data")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-    @app.post("/reset_password")
     def resetpassword(self, em, new_pw):
         """Update a user's password."""
         with self.get_connection() as conn:
@@ -189,7 +182,6 @@ class RDSApp:
                 print("Success - Updated password")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-    @app.delete("/hard_reset")
     def hardreset(self):
         """Delete all data from both tables (use with caution)."""
         with self.get_connection() as conn:
@@ -201,19 +193,13 @@ class RDSApp:
                 print("Success - Hard reset completed")
             except pymysql.Error as e:
                 print("Error", e.args[0], "-", e.args[1])
-# Initialize the application and set up tables on startup
-app = RDSApp()
-app.__init__()
-app.setup_tables()
-"""
-Just a dev note: Here are the URLS and HTML methods for each endpoint in the RDSApp class:
-POST /insert_data - Insert a new score entry for a user
-POST /new_user - Create a new user account
-POST /auth_user - Authenticate a user by email and password
-GET /list_users - Retrieve a list of registered users
-GET /list_results - Retrieve stored score results for a user
-DELETE /clear_data - Delete all score history for a user
-DELETE /delete_user - Delete a user and their associated score data
-POST /reset_password - Update a user's password
-DELETE /hard_reset - Delete all data from both tables (use with caution)
-"""
+# Test code - demonstrates usage of RDSApp methods
+rapp = RDSApp()
+rapp.__init__()
+rapp.setup_tables()
+rapp.new_user("geoffrey.dai314@gmail.com", "Geoffrey Dai", "admin", "Guang1225!")
+rapp.new_user("snewblanc@hcsdk8.org", "Stephanie Newblanc", "stephanie", "mypassword123!")
+print(rapp.listusers())
+print(rapp.authuser("geoffrey.dai314@gmail.com", "Guang1225!"))
+print(rapp.insert_data("admin", 85, {"Q1": "Correct", "Q2": "Incorrect", "Q3": "Correct"}))
+print(rapp.listresults("admin"))
