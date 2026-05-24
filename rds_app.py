@@ -6,7 +6,6 @@ Demonstrates proper patterns for interacting with Amazon RDS (MySQL)
 import pymysql
 from pymysql.cursors import DictCursor
 from contextlib import contextmanager
-import json
 from datetime import datetime
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 from fastapi import FastAPI
@@ -72,7 +71,6 @@ def insert_data(username, score, qar):
                 "Score": score,
                 "Questions/Results": qar,
             }
-            newJSON = json.dumps(newJSON)
             cursor.execute(
                 "INSERT INTO scoretables (username, results) VALUES (%s, %s);",
                 (username, newJSON),
@@ -129,7 +127,7 @@ def listusers():
             cursor.execute("SELECT email, realname FROM users;")
             results = cursor.fetchall()
             print("Success - Retrieved users")
-            return json.dumps(results)
+            return results
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
             return {"result": "Error retrieving users"}
@@ -142,7 +140,7 @@ def listresults(username):
             cursor.execute("SELECT results FROM scoretables WHERE username = %s;", (username,))
             results = cursor.fetchall()
             print("Success - Retrieved results")
-            return json.dumps(results)
+            return results
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
             return {"result": "User not found"}
