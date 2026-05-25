@@ -263,7 +263,7 @@ def api_resetpassword(em: str, new_pw: str):
 @app.delete("/hard_reset")
 def api_hardreset():
     return hardreset()
-app.get("/get_name")
+@app.get("/get_name")
 def api_getname(em: str):
     return getname(em)
 
