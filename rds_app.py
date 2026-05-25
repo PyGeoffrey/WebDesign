@@ -191,6 +191,21 @@ def hardreset():
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
 
+def getname(em):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT realname FROM users WHERE email = %s;", (em,))
+            result = cursor.fetchone()
+            if result:
+                print("Success - Retrieved name")
+                return result['realname']
+            else:
+                print("Error - User not found")
+                return False
+        except pymysql.Error as e:
+            print("Error", e.args[0], "-", e.args[1])
+            return False
 
 # Wire FastAPI routes to the module-level functions so JS can call them without `self`.
 @app.on_event("startup")
@@ -241,6 +256,9 @@ def api_resetpassword(em: str, new_pw: str):
 @app.delete("/hard_reset")
 def api_hardreset():
     return hardreset()
+app.get("/get_name")
+def api_getname(em: str):
+    return getname(em)
 
 """
 Just a dev note: Here are the URLS and HTML methods for each endpoint in the module:
@@ -253,4 +271,5 @@ DELETE /clear_data - Delete all score history for a user
 DELETE /delete_user - Delete a user and their associated score data
 POST /reset_password - Update a user's password
 DELETE /hard_reset - Delete all data from both tables (use with caution)
+GET /get_name - Retrieve a user's real name by email
 """
