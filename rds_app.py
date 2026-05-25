@@ -214,6 +214,21 @@ def getname(em):
             print("Error", e.args[0], "-", e.args[1])
             return False
 
+def getun(em):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT username FROM users WHERE email = %s;", (em,))
+            result = cursor.fetchone()
+            if result:
+                print("Success - Retrieved username")
+                return result['username']
+            else:
+                print("Error - User not found")
+                return False
+        except pymysql.Error as e:
+            print("Error", e.args[0], "-", e.args[1])
+            return False
 # Wire FastAPI routes to the module-level functions so JS can call them without `self`.
 @app.on_event("startup")
 def _startup():
@@ -266,6 +281,10 @@ def api_hardreset():
 @app.get("/get_name")
 def api_getname(em: str):
     return getname(em)
+
+@app.get("/get_username")
+def api_getusername(em: str):
+    return getun(em)
 
 """
 Just a dev note: Here are the URLS and HTML methods for each endpoint in the module:
