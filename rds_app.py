@@ -9,8 +9,15 @@ from contextlib import contextmanager
 from datetime import datetime
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 from fastapi import FastAPI
-app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows all origins
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Build connection params on demand so functions don't need `self`.
 def _connection_params():
     return {
