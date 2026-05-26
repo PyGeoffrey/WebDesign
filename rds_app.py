@@ -10,6 +10,7 @@ from datetime import datetime
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import json as JSON
 
 app = FastAPI()
 app.add_middleware(
@@ -78,6 +79,7 @@ def insert_data(username, score, qar):
                 "Score": score,
                 "Questions/Results": qar,
             }
+            newJSON = JSON.dumps(newJSON)
             cursor.execute(
                 "INSERT INTO scoretables (username, results) VALUES (%s, %s);",
                 (username, newJSON),
