@@ -261,6 +261,15 @@ def getachievements(username):
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
             return {"result": "User not found"}
+def removeachievement(username, achievement):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM achievements WHERE username = %s AND achievement = %s;", (username, achievement))
+            conn.commit()
+            print("Success - Removed achievement")
+        except pymysql.Error as e:
+            print("Error", e.args[0], "-", e.args[1])
 # Wire FastAPI routes to the module-level functions so JS can call them without `self`.
 @app.on_event("startup")
 def _startup():
@@ -325,6 +334,10 @@ def api_addachievement(username: str, achievement: str):
 @app.get("/get_achievements")
 def api_getachievements(username: str):
     return getachievements(username)
+
+@app.delete("/remove_achievement")
+def api_removeachievement(username: str, achievement: str):
+    return removeachievement(username, achievement)
 """
 Just a dev note: Here are the URLS and HTML methods for each endpoint in the module:
 POST /insert_data - Insert a new score entry for a user
@@ -337,4 +350,8 @@ DELETE /delete_user - Delete a user and their associated score data
 POST /reset_password - Update a user's password
 DELETE /hard_reset - Delete all data from both tables (use with caution)
 GET /get_name - Retrieve a user's real name by email
+GET /get_username - Retrieve a user's username by email
+POST /add_achievement - Add an achievement for a user
+GET /get_achievements - Retrieve a user's achievements
+DELETE /remove_achievement - Remove an achievement from a user
 """
