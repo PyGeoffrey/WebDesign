@@ -64,6 +64,13 @@ def setup_tables():
                     results JSON
                 );
             """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS achievements (
+                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(50),
+                    achievement TEXT
+                );
+            """)
             conn.commit()
             print("Success - Created tables")
         except pymysql.Error as e:
@@ -231,6 +238,29 @@ def getun(em):
         except pymysql.Error as e:
             print("Error", e.args[0], "-", e.args[1])
             return False
+def addachievement(username, achievement):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO achievements (username, achievement) VALUES (%s, %s);",
+                (username, achievement),
+            )
+            conn.commit()
+            print("Success - Added achievement")
+        except pymysql.Error as e:
+            print("Error", e.args[0], "-", e.args[1])
+def getachievements(username):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT achievement FROM achievements WHERE username = %s;", (username,))
+            results = cursor.fetchall()
+            print("Success - Retrieved achievements")
+            return results
+        except pymysql.Error as e:
+            print("Error", e.args[0], "-", e.args[1])
+            return {"result": "User not found"}
 # Wire FastAPI routes to the module-level functions so JS can call them without `self`.
 @app.on_event("startup")
 def _startup():
@@ -288,6 +318,13 @@ def api_getname(em: str):
 def api_getusername(em: str):
     return getun(em)
 
+@app.post("/add_achievement")
+def api_addachievement(username: str, achievement: str):
+    return addachievement(username, achievement)
+
+@app.get("/get_achievements")
+def api_getachievements(username: str):
+    return getachievements(username)
 """
 Just a dev note: Here are the URLS and HTML methods for each endpoint in the module:
 POST /insert_data - Insert a new score entry for a user
