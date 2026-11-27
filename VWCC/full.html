@@ -4,14 +4,6 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>VWCC</title>
-        <!-- Apply the saved theme before rendering to avoid a light-theme flash. -->
-        <script>
-            try {
-                if (localStorage.getItem("vwcc-theme") === "dark") {
-                    document.documentElement.classList.add("dark-theme-preload");
-                }
-            } catch (error) {}
-        </script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap">
@@ -1434,11 +1426,11 @@
                   showPopup("Signed in.");
                   if (rememberMe.is(":checked")) {
                       // Remember only the email; password storage is handled by the browser's password manager.
-                      localStorage.setItem("vwcc-remembered-email", email);
-                      localStorage.setItem("vwcc-remember-me", "true");
+                      //localStorage.setItem("vwcc-remembered-email", email);
+                      //localStorage.setItem("vwcc-remember-me", "true");
                   } else {
-                      localStorage.removeItem("vwcc-remembered-email");
-                      localStorage.removeItem("vwcc-remember-me");
+                      //localStorage.removeItem("vwcc-remembered-email");
+                      //localStorage.removeItem("vwcc-remember-me");
                   }
                   // Replace the forms with the dashboard after successful authentication.
                   $("#authContainer").hide();
@@ -1460,8 +1452,8 @@
                   console.log("Logout successful.");
                   showPopup("You have been logged out.");
                   // Explicit logout removes the saved email and Remember Me preference.
-                  localStorage.removeItem("vwcc-remembered-email");
-                  localStorage.removeItem("vwcc-remember-me");
+                  //localStorage.removeItem("vwcc-remembered-email");
+                  //localStorage.removeItem("vwcc-remember-me");
                   $("#rememberMe").prop("checked", false);
                   $("#loginEmail").val("");
                   $("#loginPassword").val("");
@@ -1472,7 +1464,7 @@
           });
           
           const themeButton = $("#themeButton"); // Button the user clicks to switch themes.
-          const savedTheme = localStorage.getItem("vwcc-theme"); // Theme selected during an earlier visit.
+          const savedTheme = "light"; // Theme selected during an earlier visit.
           
           // theme: either "dark" or "light", used to select the page's color palette.
           // Apply theme classes and update the button label to match the active mode.
@@ -1491,11 +1483,11 @@
           themeButton.click(function() {
               const nextTheme = $("body").hasClass("dark-theme") ? "light" : "dark"; // Choose the opposite of the current mode.
               applyTheme(nextTheme);
-              localStorage.setItem("vwcc-theme", nextTheme);
+              //localStorage.setItem("vwcc-theme", nextTheme);
           });
           
           const rememberMe = $("#rememberMe"); // Checkbox that controls local email remembering.
-          const rememberedEmail = localStorage.getItem("vwcc-remembered-email"); // Address saved by a previous opt-in.
+          const rememberedEmail = NULL; // Address saved by a previous opt-in.
           
           if (rememberedEmail) {
               // Prefill only the email; passwords remain under browser password-manager control.
@@ -1506,8 +1498,8 @@
           rememberMe.on("change", function() {
               if (!rememberMe.is(":checked")) {
               // Unchecking the option immediately removes its saved email and preference.
-                  localStorage.removeItem("vwcc-remembered-email");
-                  localStorage.removeItem("vwcc-remember-me");
+                  //localStorage.removeItem("vwcc-remembered-email");
+                  //localStorage.removeItem("vwcc-remember-me");
               }
           });
           
@@ -1515,7 +1507,7 @@
           // Show account-specific dashboard messages and load this account's browser-local projects.
           async function showDashboard(user) {
               const displayNameKey = "vwcc-local-display-name-" + user.id; // Store each account's alias under its unique ID.
-              const savedDisplayName = localStorage.getItem(displayNameKey)?.trim(); // Treat blank aliases as missing.
+              const savedDisplayName = NULL; // Treat blank aliases as missing.
               const welcomeMessage = $("#welcomeMessage"); // Element used for the temporary greeting.
               const repositoryNotice = $("#repositoryNotice"); // Special notice for the main repository account.
               const isMainAccount = user.email?.toLowerCase() === "main@frame.com"; // Compare emails without case sensitivity.
@@ -1566,34 +1558,7 @@
           // No parameters; this reads the saved preference and asks Supabase for the stored session.
           // Restore login only when Remember Me was enabled on this browser.
           async function restoreRememberedSession() {
-              if (localStorage.getItem("vwcc-remember-me") !== "true") {
-                  await new Promise(resolve => setTimeout(resolve, 500));
-                  setLoading(false);
-                  return;
-              }
-          
-              const startedAt = performance.now(); // Used to enforce a minimum loading-screen duration.
-          
-              // Ask Supabase whether this browser still has a valid sign-in session.
-              // data may contain the restored session; error describes a failed session lookup.
-              const { data, error } = await supabaseClient.auth.getSession();
-          
-              const elapsed = performance.now() - startedAt; // Time spent checking the session.
-              if (elapsed < 500) {
-                  await new Promise(resolve => setTimeout(resolve, 500 - elapsed));
-              }
-          
-              setLoading(false);
-          
-              if (error) {
-                  console.error("Error restoring session:", error.message);
-                  showPopup("Error restoring session: " + error.message, "error");
-                  return;
-              }
-          
-              if (data.session?.user) {
-                  await showDashboard(data.session.user);
-              }
+              return;
           }
           
           // Start session restoration as soon as the page's event handlers are ready.
@@ -1655,7 +1620,7 @@
               setSaveStatus("saving", "Saving...");
           
               // Keep active tab and name sequence locally because the database table does not contain those fields.
-              localStorage.setItem(projectStorageKey, JSON.stringify({ activeProjectId, projectNameSequence }));
+              //localStorage.setItem(projectStorageKey, JSON.stringify({ activeProjectId, projectNameSequence }));
           
               try {
                   const projectRows = projects.map(project => ({
@@ -1774,16 +1739,7 @@
           function deleteProject(projectId) {
               const project = projects.find(item => item.id === projectId); // Resolve the project whose tab was closed.
               if (!project) return;
-          
-              try {
-                  // This preference is stored separately so it survives deleting every project.
-                  if (localStorage.getItem(projectStorageKey + "-skip-delete-confirmation") === "true") {
-                      commitProjectDeletion(projectId);
-                      return;
-                  }
-              } catch (error) {
-                  console.error("Unable to read delete confirmation preference:", error);
-              }
+    
           
               pendingProjectAction = { type: "delete", projectId };
               projectDialogTitle.textContent = "Delete project?";
@@ -1845,31 +1801,7 @@
               event.preventDefault();
               if (!pendingProjectAction) return;
           
-              if (pendingProjectAction.type === "display-name") {
-                  const name = projectNameInput.value.trim(); // Remove accidental spaces at the beginning/end.
-                  if (!name) {
-                      projectDialogMessage.textContent = "Enter a display name to continue.";
-                      projectNameInput.focus();
-                      return;
-                  }
-          
-                  try {
-                      // Save this display alias locally for this account; it is not synced to Supabase.
-                      localStorage.setItem("vwcc-local-display-name-" + pendingProjectAction.userId, name);
-                  } catch (error) {
-                      console.error("Unable to save display name:", error);
-                      projectDialogMessage.textContent = "The name could not be saved in this browser. Check storage availability and try again.";
-                      showPopup("Display name could not be saved.", "error");
-                      return;
-                  }
-          
-                  closeProjectDialog();
-                  clearTimeout(window.welcomeMessageTimer);
-                  $("#welcomeMessage").stop(true).text("Welcome, " + name + "!").fadeIn(180);
-                  window.welcomeMessageTimer = setTimeout(() => $("#welcomeMessage").fadeOut(180), 3000);
-                  showPopup("Display name saved.");
-                  return;
-              }
+        
           
               if (pendingProjectAction.type === "rename") {
                   const project = projects.find(item => item.id === pendingProjectAction.projectId); // Project being renamed.
@@ -1903,7 +1835,7 @@
                       if (skipDeleteConfirmation.checked) {
                           try {
                               // Remember the opt-out separately from project data so it survives an empty project list.
-                              localStorage.setItem(projectStorageKey + "-skip-delete-confirmation", "true");
+                              //localStorage.setItem(projectStorageKey + "-skip-delete-confirmation", "true");
                           } catch (error) {
                               console.error("Unable to save delete confirmation preference:", error);
                               showPopup("Could not save the delete preference.", "error");
@@ -2045,11 +1977,6 @@
               currentUserId = user.id;
           
               let savedUI = null;
-              try {
-                  savedUI = JSON.parse(localStorage.getItem(projectStorageKey) || "null");
-              } catch (error) {
-                  console.error("Unable to read local project preferences:", error);
-              }
           
               // On startup, select the first project returned by Supabase rather than restoring a previous active tab.
               activeProjectId = null;
@@ -2086,7 +2013,7 @@
                   // Preserve migration from the previous localStorage format before switching fully to Supabase.
                   let legacyProjects = null;
                   try {
-                      const legacySaved = JSON.parse(localStorage.getItem(projectStorageKey) || "null");
+                      const legacySaved = JSON.parse("null");
                       legacyProjects = Array.isArray(legacySaved?.projects) ? legacySaved.projects : null;
                   } catch (error) {
                       console.error("Unable to read legacy project data:", error);
