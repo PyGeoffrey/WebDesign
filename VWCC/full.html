@@ -1487,7 +1487,7 @@
           });
           
           const rememberMe = $("#rememberMe"); // Checkbox that controls local email remembering.
-          const rememberedEmail = NULL; // Address saved by a previous opt-in.
+          const rememberedEmail = null; // Address saved by a previous opt-in.
           
           if (rememberedEmail) {
               // Prefill only the email; passwords remain under browser password-manager control.
@@ -1507,7 +1507,7 @@
           // Show account-specific dashboard messages and load this account's browser-local projects.
           async function showDashboard(user) {
               const displayNameKey = "vwcc-local-display-name-" + user.id; // Store each account's alias under its unique ID.
-              const savedDisplayName = NULL; // Treat blank aliases as missing.
+              const savedDisplayName = null; // Treat blank aliases as missing.
               const welcomeMessage = $("#welcomeMessage"); // Element used for the temporary greeting.
               const repositoryNotice = $("#repositoryNotice"); // Special notice for the main repository account.
               const isMainAccount = user.email?.toLowerCase() === "main@frame.com"; // Compare emails without case sensitivity.
