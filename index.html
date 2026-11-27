@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>VWCC</title>
+        <!-- Apply the saved theme before rendering to avoid a light-theme flash. -->
+        <script>
+            try {
+                if (localStorage.getItem("vwcc-theme") === "dark") {
+                    document.documentElement.classList.add("dark-theme-preload");
+                }
+            } catch (error) {}
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/themes/prism-tomorrow.min.css">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div id="loadingScreen" class="loading-screen is-loading" role="status" aria-live="polite" aria-hidden="false">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p>Working...</p>
+            </div>
+        </div>
+
+        <button class="theme-button page-theme-button" id="themeButton" type="button" aria-label="Switch to dark theme">⏾&nbsp;Dark</button>
+
+        <!-- Separate forms preserve native Enter submission and password-manager support. -->
+        <div id="authContainer" class="auth-container">
+            <form id="signupForm" class="auth-form">
+                <h1 class="auth-title">Sign Up</h1>
+                <input class="auth-input" id="signupUsername" name="name" type="text" placeholder="Display Name" autocomplete="name" />
+                <input class="auth-input" id="signupEmail" name="email" type="email" placeholder="Email" autocomplete="email" required />
+                <input class="auth-input" id="signupPassword" name="password" type="password" placeholder="Password" autocomplete="new-password" required />
+                <button class="auth-button primary-button" id="signupButton" type="submit">Sign Up</button>
+            </form>
+
+            <form id="loginForm" class="auth-form">
+                <h1 class="auth-title">Log In</h1>
+                <input class="auth-input" id="loginEmail" name="email" type="email" placeholder="Email" autocomplete="username" required />
+                <input class="auth-input" id="loginPassword" name="password" type="password" placeholder="Password" autocomplete="current-password" required />
+                <label class="remember-option" for="rememberMe">
+                    <input id="rememberMe" name="remember-me" type="checkbox" />
+                    <span>Remember me</span>
+                </label>
+                <button class="auth-button secondary-button" id="loginButton" type="submit">Log In</button>
+            </form>
+        </div>
+
+        <!-- The workspace switches between project tabs and the empty-project prompt. -->
+        <div id="dashboard" class="dashboard-card" style="display: none;">
+            <div class="dashboard-header">
+                <div>
+                    <p class="dashboard-kicker">Code Vault</p>
+                    <h1 class="dashboard-title">Dashboard</h1>
+                </div>
+                <div class="dashboard-actions">
+                    <button class="auth-button secondary-button logout-button" id="logoutButton">Log Out</button>
+                </div>
+            </div>
+
+            <p class="welcome-message" id="welcomeMessage">Welcome!</p>
+            <p class="repository-notice" id="repositoryNotice" style="display: none;"></p>
+
+            <section class="code-editor" aria-label="Code editor">
+                <div class="project-bar">
+                    <div class="project-tabs" id="projectTabs" role="tablist" aria-label="Projects"></div>
+                    <button class="new-project-button" id="newProjectButton" type="button" aria-label="New project" title="New project">+</button>
+                </div>
+                <div class="editor-toolbar">
+                    <div class="editor-toolbar-leading">
+                        <span class="editor-language">HTML</span>
+                        <span class="save-status" id="saveStatus" data-state="saved" role="status" aria-live="polite">
+                            <span class="save-status-indicator" aria-hidden="true"></span>
+                            <span class="save-status-label">Saved</span>
+                        </span>
+                    </div>
+                    <button class="run-button" id="runCodeButton" type="button">Run</button>
+                </div>
+                <div class="code-editor-area">
+                    <pre class="code-highlight" aria-hidden="true"><code class="language-markup"></code></pre>
+                    <textarea class="code-input" aria-label="Code" spellcheck="false" autocomplete="off">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;My Project&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, World!&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+                </div>
+                <section id="codeDiagnostics" class="code-diagnostics" aria-label="HTML diagnostics" aria-live="polite" hidden>
+                    <p class="diagnostics-summary"></p>
+                    <ol class="diagnostics-list"></ol>
+                </section>
+                <div class="editor-output">
+                    <div class="output-heading">Output</div>
+                    <!-- The sandbox lets scripts run in the preview without granting page-level access. -->
+                    <iframe class="code-output" title="Code output" sandbox="allow-scripts"></iframe>
+                </div>
+            </section>
+            <section id="emptyProjectsState" class="empty-projects-state" aria-label="No projects" hidden>
+                <p>Press the + button to get started coding!</p>
+                <button class="new-project-button empty-new-project-button" id="emptyNewProjectButton" type="button" aria-label="Create your first project" title="Create your first project">+</button>
+            </section>
+        </div>
+
+        <!-- Shared project actions and dialogs are positioned outside the dashboard layout. -->
+        <div id="projectContextMenu" class="project-context-menu" role="menu" aria-label="Project actions" hidden>
+            <button type="button" role="menuitem" data-project-action="move-left">Move left</button>
+            <button type="button" role="menuitem" data-project-action="move-right">Move right</button>
+            <button type="button" role="menuitem" data-project-action="rename">Rename</button>
+            <button type="button" role="menuitem" data-project-action="delete">Delete</button>
+        </div>
+
+        <div id="projectDialog" class="project-dialog-backdrop" hidden>
+            <form id="projectDialogForm" class="project-dialog" role="dialog" aria-modal="true" aria-labelledby="projectDialogTitle">
+                <h2 id="projectDialogTitle"></h2>
+                <p id="projectDialogMessage"></p>
+                <input id="projectNameInput" class="auth-input" type="text" maxlength="40" autocomplete="off" aria-label="Name" placeholder="Enter a name" hidden>
+                <label id="skipDeleteConfirmationOption" class="delete-confirm-option" hidden>
+                    <input id="skipDeleteConfirmation" type="checkbox">
+                    <span>Don't show again</span>
+                </label>
+                <div class="project-dialog-actions">
+                    <button id="projectDialogCancel" class="secondary-button" type="button">Cancel</button>
+                    <button id="projectDialogConfirm" class="primary-button" type="submit">Save</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="popupStack" class="popup-stack" aria-live="polite" aria-label="Notifications"></div>
+
+        <!-- Load global libraries first because app.js uses their browser globals immediately. -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/4.1.0/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/prism.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/components/prism-markup.min.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html>

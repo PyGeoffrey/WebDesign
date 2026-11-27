@@ -1,0 +1,1194 @@
+/* Apply the saved dark palette before page rendering to prevent a bright flash on reload. */
+html.dark-theme-preload,
+html.dark-theme-preload body {
+    color-scheme: dark;
+}
+
+html.dark-theme-preload body {
+    background: linear-gradient(135deg, #0d1624 0%, #18253a 100%);
+}
+
+:root {
+    --ink: #17233a; /* Main text color. */
+    --muted: #67748a; /* Secondary text and helper copy. */
+    --line: #dbe3ef; /* Shared borders and dividers. */
+    --paper: #f4f7fc; /* Main page surface. */
+    --white: #ffffff; /* Raised cards and input backgrounds. */
+    --green: #315fa8; /* Primary action and accent color. */
+    --green-dark: #24487e; /* Darker accent for emphasis and hover states. */
+    --green-soft: #dfe8f6; /* Low-contrast accent surface. */
+    --gold: #d7a928; /* Secondary accent and editor action color. */
+    --gold-soft: #f4e7b9; /* Low-contrast gold surface. */
+    --editor-bg: #111c2c; /* Code editor background. */
+    --editor-toolbar: #111c2c; /* Editor toolbar background. */
+    --editor-text: #eaf1fb; /* Code editor and toolbar text. */
+}
+
+* {
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+.code-input,
+.code-highlight {
+    resize: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-text) var(--editor-bg);
+}
+
+.code-input::-webkit-scrollbar,
+.code-highlight::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    display: block;
+}
+
+.code-input::-webkit-scrollbar-track,
+.code-highlight::-webkit-scrollbar-track {
+    background: var(--editor-bg);
+}
+
+.code-input::-webkit-scrollbar-thumb,
+.code-highlight::-webkit-scrollbar-thumb {
+    border: 2px solid var(--editor-bg);
+    background: var(--editor-text);
+}
+
+.code-input::-webkit-scrollbar-thumb:hover,
+.code-highlight::-webkit-scrollbar-thumb:hover {
+    background: var(--gold);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 20% 15%, rgba(49, 95, 168, .10), transparent 18rem),
+        radial-gradient(circle at 82% 78%, rgba(215, 169, 40, .08), transparent 16rem),
+        linear-gradient(135deg, #edf3fb 0%, var(--paper) 100%);
+}
+
+.auth-container,
+.dashboard-card {
+    width: min(440px, calc(100vw - 48px));
+}
+
+.dashboard-card {
+    width: min(860px, calc(100vw - 48px));
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.dashboard-kicker {
+    margin: 0 0 4px;
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.logout-button {
+    width: auto;
+    min-width: 100px;
+    height: 44px;
+}
+
+.code-editor {
+    overflow: hidden;
+    border: 1px solid #cfdad4;
+    border-color: var(--line);
+    border-radius: 14px;
+    background: var(--editor-bg);
+    box-shadow: 0 16px 36px rgba(24, 55, 104, .14);
+}
+
+/* Keep the no-project prompt inside the same workspace footprint as the editor. */
+.empty-projects-state {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, .48);
+    text-align: center;
+}
+
+.empty-projects-state[hidden] {
+    display: none;
+}
+
+.empty-projects-state p {
+    margin: 0;
+    padding: 0 20px;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.empty-new-project-button {
+    width: 48px;
+    min-height: 48px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--green-dark);
+    background: var(--white);
+    font-size: 28px;
+}
+
+.editor-toolbar {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px 8px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    color: var(--editor-text);
+    background: var(--editor-toolbar);
+}
+
+.editor-toolbar-leading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Automatic HTML validator results are listed below the editor without replacing the source. */
+.code-diagnostics {
+    max-height: 220px;
+    overflow: auto;
+    padding: 12px 16px;
+    color: var(--editor-text);
+    background: var(--editor-bg);
+    border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.code-diagnostics[hidden] {
+    display: none;
+}
+
+.diagnostics-summary {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.diagnostics-list {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.diagnostic-item {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border: 0;
+    border-left: 3px solid #df7777;
+    border-radius: 3px;
+    padding: 7px 9px;
+    color: var(--editor-text);
+    background: rgba(223, 119, 119, .12);
+    text-align: left;
+    font: 500 12px/1.45 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.diagnostic-item.is-warning {
+    border-left-color: var(--gold);
+    background: rgba(215, 169, 40, .12);
+}
+
+.diagnostic-location {
+    flex: 0 0 auto;
+    opacity: .75;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Save-state badge: the data-state attribute selects the dot's color and animation. */
+.save-status {
+    min-height: 26px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 999px;
+    color: var(--editor-text);
+    background: rgba(255, 255, 255, .06);
+    font: 600 11px/1 system-ui, sans-serif;
+}
+
+.save-status-indicator {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+    border-radius: 50%;
+    background: #65b887;
+}
+
+.save-status[data-state="saving"] .save-status-indicator {
+    background: var(--gold);
+    animation: save-status-pulse .8s ease-in-out infinite alternate;
+}
+
+.save-status[data-state="error"] .save-status-indicator {
+    background: #df7777;
+}
+
+@keyframes save-status-pulse {
+    to { opacity: .35; }
+}
+
+.project-bar {
+    min-height: 48px;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 6px 8px 0;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    background: var(--editor-bg);
+}
+
+/* Tabs expand to their names; the strip scrolls instead of truncating labels. */
+.project-tabs {
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    overflow-x: auto;
+}
+
+.project-tab {
+    min-width: 120px;
+    width: max-content;
+    max-width: none;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    color: var(--editor-text);
+    background: rgba(255, 255, 255, .06);
+    cursor: grab;
+}
+
+.project-tab.is-dragging {
+    display: none;
+}
+
+.project-tab-ghost {
+    min-width: 120px;
+    min-height: 38px;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: 1px dashed var(--gold);
+    border-radius: 8px 8px 0 0;
+    padding: 0 10px;
+    color: var(--editor-text);
+    background: rgba(215, 169, 40, .12);
+    opacity: .8;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 600 12px system-ui, sans-serif;
+    pointer-events: none;
+}
+
+.project-tab.is-active {
+    border-color: rgba(255, 255, 255, .14);
+    color: var(--ink);
+    background: var(--white);
+}
+
+.project-tab-button,
+.project-close-button,
+.new-project-button {
+    min-height: 38px;
+    border: 0;
+    border-radius: 0;
+    color: inherit;
+    background: transparent;
+}
+
+.project-tab-button {
+    min-width: max-content;
+    width: max-content;
+    flex: 0 0 auto;
+    overflow: visible;
+    padding: 0 10px;
+    text-align: left;
+    text-overflow: clip;
+    white-space: nowrap;
+    font: 600 12px system-ui, sans-serif;
+}
+
+.project-close-button {
+    width: 32px;
+    flex: 0 0 32px;
+    padding: 0;
+    font: 600 18px/1 system-ui, sans-serif;
+}
+
+.project-tab-button:hover,
+.project-close-button:hover,
+.new-project-button:hover {
+    background: rgba(215, 169, 40, .18);
+}
+
+.new-project-button {
+    width: 38px;
+    flex: 0 0 38px;
+    align-self: center;
+    min-height: 34px;
+    margin-bottom: 5px;
+    background-color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 8px;
+    color: var(--editor-text);
+    font: 500 22px/1 system-ui, sans-serif;
+}
+
+/* This menu is positioned at the pointer only when a project tab is right-clicked. */
+.project-context-menu {
+    position: fixed;
+    z-index: 1200;
+    min-width: 160px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    box-shadow: 0 10px 28px rgba(23, 35, 58, .24);
+}
+
+.project-context-menu[hidden] {
+    display: none;
+}
+
+.project-context-menu button {
+    width: 100%;
+    min-height: 36px;
+    display: block;
+    border: 0;
+    border-radius: 5px;
+    padding: 0 10px;
+    color: var(--ink);
+    background: transparent;
+    text-align: left;
+    font: 600 13px system-ui, sans-serif;
+}
+
+.project-context-menu button:hover,
+.project-context-menu button:focus-visible {
+    background: var(--green-soft);
+}
+
+.project-context-menu button:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+body.dark-theme .project-context-menu {
+    border-color: var(--line);
+    background: var(--white);
+}
+
+/* Shared modal surface for the display-name, rename, and delete-confirmation flows. */
+.project-dialog-backdrop[hidden] {
+    display: none;
+}
+
+.project-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1250;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(15, 25, 40, .52);
+}
+
+.project-dialog {
+    width: min(400px, 100%);
+    display: grid;
+    gap: 14px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--ink);
+    background: var(--white);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+}
+
+.project-dialog h2,
+.project-dialog p {
+    margin: 0;
+}
+
+.project-dialog h2 {
+    font-size: 19px;
+}
+
+.project-dialog p {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.project-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.project-dialog-actions button {
+    min-height: 40px;
+    border-radius: 8px;
+    padding: 0 14px;
+    cursor: pointer;
+    font: 700 13px system-ui, sans-serif;
+}
+
+.project-dialog-actions .secondary-button {
+    border: 1px solid var(--line);
+    color: var(--ink);
+    background: var(--white);
+}
+
+.project-dialog-actions .primary-button {
+    border: 1px solid var(--green);
+    color: white;
+    background: var(--green);
+}
+
+.project-dialog-actions .delete-button {
+    border-color: #b94b4b;
+    background: #b94b4b;
+}
+
+.delete-confirm-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.delete-confirm-option[hidden] {
+    display: none;
+}
+
+.delete-confirm-option input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--green);
+    cursor: pointer;
+}
+
+.code-input {
+    width: 100%;
+    min-height: 360px;
+    resize: vertical;
+    display: block;
+    border: 0;
+    outline: 0;
+    padding: 20px;
+    color: #dde9e3;
+    background: var(--editor-bg);
+    caret-color: var(--gold);
+    font: 500 14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    tab-size: 4;
+}
+
+.code-input::placeholder { color: #718078; }
+
+.auth-container {
+    display: grid;
+    gap: 12px;
+    padding: 36px;
+    border: 1px solid rgba(210, 220, 214, .9);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 24px 70px rgba(31, 54, 44, .12);
+    backdrop-filter: blur(14px);
+}
+
+.auth-title,
+.dashboard-title {
+    margin: 8px 0 6px;
+    color: var(--ink);
+    font-size: 24px;
+    line-height: 1.2;
+    letter-spacing: -.035em;
+}
+
+.auth-input {
+    width: 100%;
+    height: 52px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    outline: none;
+    padding: 0 16px;
+    color: var(--ink);
+    background: var(--white);
+    font: 500 14px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.auth-input::placeholder { color: #929c97; }
+
+.auth-input:focus {
+    border-color: #7998ca;
+    box-shadow: 0 0 0 4px rgba(49, 95, 168, .10);
+    transform: translateY(-1px);
+}
+
+button,
+.auth-button,
+.theme-button,
+.run-button {
+    min-height: 44px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+button:focus-visible,
+.auth-button:focus-visible,
+.theme-button:focus-visible,
+.run-button:focus-visible {
+    outline: 3px solid rgba(49, 95, 168, .22);
+    outline-offset: 2px;
+}
+
+button:disabled,
+.auth-button:disabled,
+.theme-button:disabled,
+.run-button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+    transform: none;
+}
+
+.auth-button {
+    height: 52px;
+    padding: 0 18px;
+    font-size: 14px;
+}
+
+.theme-button {
+    height: 44px;
+    min-width: 72px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: var(--green-dark);
+    background: var(--white);
+    font: 700 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.run-button {
+    height: 36px;
+    min-width: 72px;
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: #17233a;
+    background: var(--gold);
+    font: 800 12px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.auth-button:active,
+.theme-button:active,
+.run-button:active {
+    transform: translateY(1px);
+}
+
+button:not(:disabled):hover,
+.auth-button:not(:disabled):hover,
+.theme-button:not(:disabled):hover,
+.run-button:not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+button:not(:disabled):active,
+.auth-button:not(:disabled):active,
+.theme-button:not(:disabled):active,
+.run-button:not(:disabled):active {
+    transform: translateY(0);
+}
+
+.primary-button:not(:disabled):hover {
+    border-color: var(--green-dark);
+    background: var(--green-dark);
+    box-shadow: 0 12px 28px rgba(49, 95, 168, .24);
+}
+
+.secondary-button:not(:disabled):hover,
+.theme-button:not(:disabled):hover {
+    border-color: #7998ca;
+    background: var(--green-soft);
+    box-shadow: 0 8px 18px rgba(49, 95, 168, .12);
+}
+
+.run-button:not(:disabled):hover {
+    border-color: #e5c361;
+    background: #e5c361;
+    box-shadow: 0 8px 18px rgba(215, 169, 40, .20);
+}
+
+.primary-button {
+    color: var(--white);
+    border-color: var(--green);
+    background: var(--green);
+    box-shadow: 0 10px 24px rgba(49, 95, 168, .18);
+}
+
+.secondary-button,
+.theme-button {
+    color: var(--green-dark);
+    border: 2px solid var(--line);
+    background: var(--white);
+}
+
+.secondary-button:hover,
+.theme-button:hover {
+    border-color: #7998ca;
+    background: var(--green-soft);
+}
+
+.run-button {
+    color: #17233a;
+    border-color: var(--gold);
+    background: var(--gold);
+}
+
+.run-button:hover {
+    border-color: #e5c361;
+    background: #e5c361;
+}
+
+.dashboard-card {
+    display: grid;
+    gap: 14px;
+    padding: 42px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--white);
+    box-shadow: 0 24px 70px rgba(31, 54, 44, .12);
+}
+
+.dashboard-title {
+    margin: 0;
+    font-size: 30px;
+}
+
+.welcome-message {
+    margin: 0 0 12px;
+    color: var(--muted);
+}
+
+.dashboard-card .secondary-button { width: 100%; }
+
+.dashboard-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-button {
+    height: 44px;
+    min-width: 72px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: var(--green-dark);
+    background: var(--white);
+    font: 700 13px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.theme-button:hover {
+    border-color: #7998ca;
+    background: var(--green-soft);
+    box-shadow: 0 8px 18px rgba(49, 95, 168, .12);
+}
+
+.theme-button:active { transform: translateY(1px); }
+
+/* Override the shared palette when dark-theme is added to the body. */
+body.dark-theme {
+    --ink: #bfcbe0; /* Main text color in dark mode. */
+    --muted: #929fb5; /* Secondary text in dark mode. */
+    --line: #344762; /* Borders and dividers in dark mode. */
+    --paper: #0d1624; /* Main page surface in dark mode. */
+    --white: #18253a; /* Raised cards and input backgrounds in dark mode. */
+    --green: #82a8df; /* Primary action and accent in dark mode. */
+    --green-dark: #b7cbed; /* Stronger accent in dark mode. */
+    --green-soft: #263a58; /* Low-contrast accent surface in dark mode. */
+    --gold: #d9b84f; /* Gold accent in dark mode. */
+    --gold-soft: #514627; /* Low-contrast gold surface in dark mode. */
+    --editor-bg: #d6dfec; /* Code editor background in dark mode's palette. */
+    --editor-toolbar: #cbd6e5; /* Editor toolbar surface in dark mode's palette. */
+    --editor-text: #27364d; /* Code and toolbar text in dark mode's palette. */
+    background:
+        radial-gradient(circle at 20% 15%, rgba(130, 168, 223, .09), transparent 18rem),
+        radial-gradient(circle at 82% 78%, rgba(217, 184, 79, .07), transparent 16rem),
+        linear-gradient(135deg, #0d1624 0%, #18253a 100%);
+}
+
+body.dark-theme .auth-container,
+body.dark-theme .dashboard-card {
+    border-color: var(--line);
+    background: rgba(24, 37, 58, .96);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .32);
+}
+
+body.dark-theme .auth-input {
+    color: var(--ink);
+    background: #1d2d47;
+}
+
+body.dark-theme .primary-button {
+    color: #0d1624;
+}
+
+body.dark-theme .editor-language {
+    color: var(--editor-text);
+}
+
+body.dark-theme .code-editor,
+body.dark-theme .code-editor-area {
+    border-color: #344762;
+}
+
+body.dark-theme .code-highlight code,
+body.dark-theme .code-highlight {
+    text-shadow: none;
+}
+
+body.dark-theme .editor-output {
+    background: #cbd6e5;
+}
+
+body.dark-theme .output-heading {
+    background: #b8c5d7;
+    color: #37475f;
+}
+
+.remember-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    width: fit-content;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.remember-option input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--green);
+    cursor: pointer;
+}
+
+.run-button {
+    height: 36px;
+    min-width: 72px;
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: #17233a;
+    background: var(--gold);
+    font: 800 12px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.run-button:hover { background: #e5c361; }
+.run-button:active { transform: translateY(1px); }
+
+.editor-output {
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    background: #f8faf9;
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+.output-heading {
+    padding: 8px 16px;
+    border-bottom: 1px solid #dfe6e2;
+    color: #69736e;
+    background: #edf3ef;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+/* Give the rendered iframe output a stable full-width area below its heading. */
+.code-output {
+    width: 100%;
+    min-height: 180px;
+    display: block;
+    border: 0;
+    background: white;
+}
+
+.editor-language {
+    color: var(--editor-text);
+    font: 800 12px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: .08em;
+}
+
+.code-editor-area {
+    position: relative;
+    min-height: 360px;
+    overflow: hidden;
+    background: #111c2c;
+}
+
+/* The transparent textarea and Prism layer must share metrics to keep the caret aligned. */
+.code-highlight,
+.code-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 360px;
+    margin: 0 !important;
+    border: 0;
+    padding: 21px 20px 20px;
+    white-space: pre-wrap;
+    overflow-wrap: normal;
+    tab-size: 4;
+    line-height: 24px;
+    font: 500 14px/24px "JetBrains Mono", monospace;
+}
+
+.code-highlight {
+    z-index: 1;
+    overflow: auto;
+    pointer-events: none;
+    background: transparent;
+}
+
+.code-highlight code {
+    font: inherit;
+    line-height: inherit;
+    white-space: inherit;
+    tab-size: inherit;
+}
+
+.code-input {
+    z-index: 2;
+    resize: vertical;
+    display: block;
+    outline: 0;
+    color: transparent;
+    background: transparent;
+    caret-color: #89cbaa;
+    -webkit-text-fill-color: transparent;
+}
+
+.code-input::selection {
+    background: rgba(137, 203, 170, .28);
+    -webkit-text-fill-color: transparent;
+}
+
+.code-editor-area .code-highlight,
+.code-editor-area .code-input {
+    padding: 21px 20px 20px;
+    white-space: pre-wrap;
+    tab-size: 4;
+    line-height: 24px;
+    font: 500 14px/24px "JetBrains Mono", monospace;
+}
+
+.code-editor-area .code-highlight code {
+    white-space: inherit;
+    tab-size: inherit;
+    font: inherit;
+}
+
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    visibility: hidden;
+    opacity: 0;
+    background: rgba(244, 247, 252, .82);
+    backdrop-filter: blur(8px);
+    transition: opacity .18s ease-out;
+}
+
+.loading-screen.is-loading {
+    visibility: visible;
+    opacity: 1;
+    transition: none;
+}
+
+.loading-content {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    color: var(--ink);
+}
+
+.loading-content p {
+    margin: 0;
+    font: 700 13px system-ui, sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.loading-spinner {
+    width: 54px;
+    height: 54px;
+    border: 4px solid var(--line);
+    border-top-color: var(--gold);
+    border-right-color: var(--green);
+    border-radius: 50%;
+    animation: loading-spin .75s linear infinite;
+}
+
+body.dark-theme .loading-screen {
+    background: rgba(13, 22, 36, .88);
+}
+
+body.dark-theme .loading-content {
+    color: var(--ink);
+}
+
+@keyframes loading-spin {
+    to { transform: rotate(360deg); }
+}
+
+.code-editor,
+.auth-container,
+.auth-input,
+.secondary-button,
+.theme-button,
+.dashboard-card {
+    border-width: 2px;
+}
+
+.editor-toolbar,
+.editor-output,
+.output-heading {
+    border-width: 2px;
+}
+
+.popup-stack {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1300;
+    width: min(380px, calc(100vw - 48px));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.popup {
+    position: relative;
+    width: 100%;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 58px;
+    padding: 12px 12px 12px 16px;
+    border: 3px solid var(--line);
+    border-radius: 12px;
+    color: var(--ink);
+    background: var(--white);
+    box-shadow: 0 14px 36px rgba(23, 35, 58, .28);
+    transition: opacity .18s ease, transform .18s ease;
+    transform: translateX(0);
+}
+
+.popup.is-visible {
+    visibility: visible;
+    opacity: 1;
+    animation: popup-slide-in .24s ease-out forwards;
+}
+
+.popup.is-leaving {
+    animation: popup-slide-out .24s ease-in forwards;
+}
+
+@keyframes popup-slide-in {
+    from { opacity: 0; transform: translateX(110%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes popup-slide-out {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(110%); }
+}
+
+.popup.is-error {
+    border-color: #c96b6b;
+    background: #fff4f4;
+}
+
+.popup.is-success {
+    border-color: var(--green);
+}
+
+.popup-close {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    flex: 0 0 34px;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink);
+    background: transparent;
+    font: 700 20px/30px system-ui, sans-serif;
+}
+
+body.dark-theme .popup {
+    border-color: var(--line);
+    background: #18253a;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, .42);
+}
+
+body.dark-theme .popup.is-error {
+    border-color: #d58a8a;
+    background: #38272c;
+}
+
+body.dark-theme .popup.is-success {
+    border-color: var(--gold);
+}
+
+body.dark-theme .popup-close {
+    border: 0;
+    color: var(--ink);
+    background: transparent;
+}
+
+@media (max-width: 520px) {
+    body { align-items: start; padding: 14px; }
+
+    .auth-container,
+    .dashboard-card {
+        width: calc(100vw - 28px);
+        border-radius: 18px;
+    }
+
+    .auth-container { padding: 24px 20px; }
+    .dashboard-card { padding: 22px 16px; }
+
+    .dashboard-header { align-items: flex-start; }
+    .logout-button { min-width: 82px; }
+    .code-input { min-height: 300px; }
+
+    .dashboard-actions { gap: 6px; }
+    .theme-button { min-width: 64px; }
+
+    .page-theme-button {
+        top: 14px;
+        right: 14px;
+    }
+}
+
+.repository-notice {
+    margin: 0;
+    padding: 12px 14px;
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    color: var(--ink);
+    background: var(--gold-soft);
+    font: 700 13px system-ui, sans-serif;
+}
+
+body,
+button,
+input {
+    font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.code-editor,
+.code-editor * {
+    font-family: "JetBrains Mono", monospace;
+}
+
+.page-theme-button {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 1200;
+}
+
+.auth-container,
+.dashboard-card,
+.auth-input,
+.code-editor,
+.editor-toolbar,
+.editor-output,
+.output-heading,
+.popup,
+.popup-close {
+    transition:
+        color .24s ease,
+        background-color .24s ease,
+        border-color .24s ease,
+        box-shadow .24s ease;
+}
+
+.auth-form {
+    display: grid;
+    gap: 12px;
+}
+
+.auth-form + .auth-form {
+    margin-top: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+}
